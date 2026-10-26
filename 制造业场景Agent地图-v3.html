@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FBN · 制造业场景Agent地图 v3</title>
+  <style>
+    :root {
+      --bg: #fafaf7;
+      --surface: #ffffff;
+      --fg: #1a1916;
+      --muted: #6b6964;
+      --border: #e8e5df;
+      --accent: #c96442;
+      --accent-soft: color-mix(in oklch, var(--accent) 10%, transparent);
+      --accent-softer: color-mix(in oklch, var(--accent) 5%, transparent);
+      --fg-soft: color-mix(in oklch, var(--fg) 5%, transparent);
+      --font-display: 'Iowan Old Style', 'Charter', Georgia, 'Times New Roman', serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      --fs-h1: clamp(36px, 4.5vw, 56px);
+      --fs-h2: clamp(28px, 3vw, 40px);
+      --fs-h3: 22px;
+      --fs-body: 16px;
+      --fs-sm: 14px;
+      --fs-xs: 12px;
+      --gap-xs: 6px;
+      --gap-sm: 10px;
+      --gap-md: 16px;
+      --gap-lg: 28px;
+      --gap-xl: 48px;
+      --gap-2xl: 80px;
+      --container: 1200px;
+      --gutter: 40px;
+      --radius: 8px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+      --tag-lean: #dbeafe;
+      --tag-lean-fg: #1e40af;
+      --tag-sc: #dcfce7;
+      --tag-sc-fg: #166534;
+      --tag-fin: #ffedd5;
+      --tag-fin-fg: #9a3412;
+      --tag-mkt: #f3e8ff;
+      --tag-mkt-fg: #6b21a8;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3,h4 { text-wrap: balance; margin: 0; }
+    p { margin: 0; text-wrap: pretty; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== Top Nav ===== */
+    .topnav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: color-mix(in oklch, var(--bg) 88%, transparent);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .topnav-inner {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-mark {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+    .topnav-meta {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    /* ===== Tab Bar ===== */
+    .tab-bar {
+      position: fixed; top: 60px; left: 0; right: 0; z-index: 99;
+      background: color-mix(in oklch, var(--bg) 92%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-bar-inner {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+      display: flex;
+      gap: 0;
+    }
+    .tab-btn {
+      padding: 14px 24px;
+      font-size: var(--fs-sm);
+      font-weight: 500;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-body);
+      position: relative;
+    }
+    .tab-btn:hover { color: var(--fg); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ===== Main ===== */
+    .main { padding-top: 120px; }
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Container ===== */
+    .container {
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 0 var(--gutter);
+    }
+
+    /* ===== Section ===== */
+    .section { padding-block: clamp(48px, 6vw, var(--gap-2xl)); }
+    .section + .section { border-top: 1px solid var(--border); }
+
+    /* ===== Hero ===== */
+    .hero {
+      padding: clamp(48px, 6vw, 80px) 0 clamp(40px, 5vw, 64px);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%; left: -20%;
+      width: 140%; height: 180%;
+      background: radial-gradient(ellipse at 30% 50%, color-mix(in oklch, var(--accent) 6%, transparent) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 30%, color-mix(in oklch, var(--accent) 4%, transparent) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero > .container { position: relative; z-index: 1; }
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: var(--gap-md);
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: var(--fs-h1);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: var(--gap-md);
+    }
+    .hero-lead {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 56ch;
+      margin: 0 auto var(--gap-xl);
+      line-height: 1.6;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: clamp(32px, 5vw, 64px);
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-num {
+      font-family: var(--font-mono);
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+    .hero-stat-label {
+      font-size: var(--fs-sm);
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ===== Scenario Card ===== */
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap-lg);
+    }
+    @media (max-width: 960px) { .scenario-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .scenario-grid { grid-template-columns: 1fr; } }
+
+    .scenario-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .scenario-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-4px);
+    }
+    .card-head {
+      padding: 24px 24px 0;
+    }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .card-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .card-tag.tag-lean { background: var(--tag-lean); color: var(--tag-lean-fg); }
+    .card-tag.tag-sc { background: var(--tag-sc); color: var(--tag-sc-fg); }
+    .card-tag.tag-fin { background: var(--tag-fin); color: var(--tag-fin-fg); }
+    .card-tag.tag-mkt { background: var(--tag-mkt); color: var(--tag-mkt-fg); }
+    .card-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .card-name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
+    }
+    .card-role {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 0;
+    }
+
+    .card-body {
+      padding: 16px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card-section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .card-trigger {
+      font-size: 13px;
+      color: var(--fg);
+      line-height: 1.55;
+      font-style: italic;
+      padding: 10px 14px;
+      background: var(--fg-soft);
+      border-radius: var(--radius);
+      border-left: 3px solid var(--border);
+    }
+    .card-question {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--fg);
+    }
+    .card-value {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .card-value strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .card-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .metric-pill {
+      display: inline-block;
+      padding: 3px 9px;
+      background: var(--accent-softer);
+      border: 1px solid color-mix(in oklch, var(--accent) 12%, transparent);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      color: color-mix(in oklch, var(--accent) 80%, var(--fg));
+    }
+
+    .card-foot {
+      padding: 16px 24px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 9px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      flex: 1;
+      text-align: center;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: color-mix(in oklch, var(--accent) 85%, black);
+      box-shadow: 0 2px 8px color-mix(in oklch, var(--accent) 30%, transparent);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      border-color: var(--border);
+    }
+    .btn-secondary:hover {
+      border-color: var(--fg);
+      background: var(--fg-soft);
+    }
+
+    /* ===== Domain Divider ===== */
+    .domain-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 44px 0 24px;
+      grid-column: 1 / -1;
+    }
+    .domain-divider:first-child { margin-top: 0; }
+    .domain-divider-label {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .domain-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .domain-divider-count {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* ===== Method Cards ===== */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--gap-lg);
+    }
+    @media (max-width: 768px) { .method-grid { grid-template-columns: 1fr; } }
+    .method-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .method-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .method-card h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .method-num {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+    .method-card p {
+      font-size: var(--fs-sm);
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .method-card .hl { color: var(--fg); font-weight: 500; }
+
+    /* ===== Dimension Cards ===== */
+    .dim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap-lg);
+    }
+    @media (max-width: 768px) { .dim-grid { grid-template-columns: 1fr; } }
+    .dim-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    .dim-card h4 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .dim-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--fs-sm);
+    }
+    .dim-item:last-child { border-bottom: none; }
+    .dim-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+    .dim-text { color: var(--muted); line-height: 1.5; }
+    .dim-text strong { color: var(--fg); font-weight: 600; }
+
+    /* ===== Matrix Table ===== */
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    .matrix-table th,
+    .matrix-table td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .matrix-table th {
+      color: #fff;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: color-mix(in oklch, var(--accent) 85%, var(--fg));
+    }
+    .matrix-table tbody tr {
+      transition: background 0.15s ease;
+    }
+    .matrix-table tbody tr:hover {
+      background: var(--accent-soft);
+    }
+    .matrix-table tbody tr:last-child td { border-bottom: none; }
+
+    .coverage-dot {
+      display: inline-flex;
+      gap: 3px;
+    }
+    .coverage-dot .on {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .coverage-dot .off {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    /* ===== Flow Diagram ===== */
+    .flow-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+    }
+    .flow {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      min-width: 900px;
+      justify-content: center;
+    }
+    .flow-node {
+      flex: 1;
+      min-width: 130px;
+      text-align: center;
+      padding: 0 6px;
+    }
+    .flow-node-box {
+      background: var(--accent-soft);
+      border: 1px solid color-mix(in oklch, var(--accent) 20%, transparent);
+      border-radius: var(--radius);
+      padding: 16px 10px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .flow-node-box:hover {
+      background: color-mix(in oklch, var(--accent) 15%, transparent);
+      box-shadow: 0 2px 12px color-mix(in oklch, var(--accent) 15%, transparent);
+    }
+    .flow-node-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    .flow-node-scene {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 300;
+    }
+
+    /* ===== Callout ===== */
+    .callout {
+      background: var(--accent-soft);
+      border-left: 4px solid var(--accent);
+      padding: 20px 24px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: var(--gap-lg) 0;
+    }
+    .callout p {
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--fg);
+    }
+
+    /* ===== Collab Steps ===== */
+    .collab-example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      box-shadow: var(--shadow-sm);
+    }
+    .collab-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 32px;
+      margin: 20px 0;
+    }
+    .collab-steps::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+    .collab-step {
+      position: relative;
+      padding: 14px 0 14px 24px;
+    }
+    .collab-step::before {
+      content: '';
+      position: absolute;
+      left: -24px;
+      top: 20px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .collab-step-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .collab-step-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .collab-step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ===== Section Headers ===== */
+    .section-header { margin-bottom: var(--gap-xl); }
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: var(--fs-h2);
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      margin-bottom: 12px;
+    }
+    .section-lead {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 56ch;
+      line-height: 1.6;
+    }
+
+    /* ===== Sub Section Title ===== */
+    .sub-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      margin-bottom: 20px;
+      padding-left: 14px;
+      border-left: 3px solid var(--accent);
+    }
+
+    /* ===== Scroll Reveal ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== Footer ===== */
+    .pagefoot {
+      padding: 32px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Top Nav ===== -->
+<header class="topnav">
+  <div class="topnav-inner">
+    <div class="logo">
+      <span class="logo-mark">FB</span>
+      FBN · 制造业场景Agent地图
+    </div>
+    <span class="topnav-meta">FineBinext</span>
+  </div>
+</header>
+
+<!-- ===== Tab Bar ===== -->
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="tab-btn active" data-tab="map">场景地图</button>
+    <button class="tab-btn" data-tab="method">选型逻辑</button>
+    <button class="tab-btn" data-tab="matrix">覆盖矩阵</button>
+    <button class="tab-btn" data-tab="collab">场景协同</button>
+  </div>
+</div>
+
+<!-- ===== Main ===== -->
+<div class="main">
+
+  <!-- ═══════════════ TAB 1: 场景地图 ═══════════════ -->
+  <div class="tab-panel active" id="panel-map">
+    <section class="hero">
+      <div class="container">
+        <p class="hero-eyebrow">Manufacturing Scenario Agent Map</p>
+        <h1>制造业场景Agent地图</h1>
+        <p class="hero-lead">覆盖研产供销服+财经五大体系、10个核心场景，从研发到售后的全链路AI+BI分析能力</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-num">10</div><div class="hero-stat-label">场景Agent</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">5</div><div class="hero-stat-label">体系覆盖</div></div>
+          <div class="hero-stat"><div class="hero-stat-num">12+</div><div class="hero-stat-label">业务部门</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+
+        <!-- 精益制造 -->
+        <!-- 研发 -->
+        <div class="domain-divider">
+          <span class="domain-divider-label">研发</span>
+          <span class="domain-divider-line"></span>
+          <span class="domain-divider-count">2 个场景</span>
+        </div>
+        <div class="scenario-grid">
+          <!-- 10 -->
+          <div class="scenario-card reveal" data-domain="lean">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-lean">研发</span><span class="card-num">#01</span></div>
+              <div class="card-name">研发项目进度与成本分析</div>
+              <div class="card-role">面向：研发总监 / 项目经理</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"新车型研发项目已延期2个月，研发费用超预算30%，老板要求本周汇报"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">项目进度是否可控？研发成本是否超支？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"靠会议追进度"</strong>升级到<strong>"数据驱动研发管理"</strong></div></div>
+              <div class="card-metrics"><span class="metric-pill">进度偏差率</span><span class="metric-pill">里程碑达成率</span><span class="metric-pill">成本执行率</span><span class="metric-pill">研发周期</span></div>
+            </div>
+            <div class="card-foot"><a href="https://next.finebi.com/decision/agent/scene/b61ad28e7cd64a5481eb3ccbfa003753" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+          <!-- 11 -->
+          <div class="scenario-card reveal" data-domain="lean">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-lean">研发</span><span class="card-num">#02</span></div>
+              <div class="card-name">BOM变更影响分析</div>
+              <div class="card-role">面向：研发总监 / 生产总监 / 质量经理</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"上月BOM变更12次，3次导致生产线停线，2次引发质量投诉，需要评估变更影响"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">BOM变更对成本、质量、交付有什么影响？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"变更后才知道影响"</strong>升级到<strong>"变更前就能评估全链路影响"</strong></div></div>
+              <div class="card-metrics"><span class="metric-pill">变更次数</span><span class="metric-pill">影响成本</span><span class="metric-pill">质量变化</span><span class="metric-pill">交付影响</span></div>
+            </div>
+            <div class="card-foot"><a href="https://next.finebi.com/decision/agent/scene/94368d15b8dd490a9baaeba92c3d53f3" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+        </div>
+
+        <!-- 生产 -->
+        <div class="domain-divider">
+          <span class="domain-divider-label">生产</span>
+          <span class="domain-divider-line"></span>
+          <span class="domain-divider-count">2 个场景</span>
+        </div>
+        <div class="scenario-grid">
+          <!-- 01 -->
+          <div class="scenario-card reveal" data-domain="lean">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-lean">生产</span><span class="card-num">#03</span></div>
+              <div class="card-name">生产效率与执行分析</div>
+              <div class="card-role">面向：生产总监 / 设备经理 / 计划主管</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"月度计划达成率仅82%，OEE下降3.5个百分点，能源费用超预算15%"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">设备效率瓶颈在哪里？计划达成偏差在哪里？能耗异常出在哪？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"看报表"</strong>升级到<strong>"做决策"</strong> —— 效率+执行+能耗一站式分析</div></div>
+              <div class="card-metrics"><span class="metric-pill">OEE</span><span class="metric-pill">计划达成率</span><span class="metric-pill">六大损失</span><span class="metric-pill">单位能耗</span></div>
+            </div>
+            <div class="card-foot"><a href="https://next.finebi.com/decision/agent/scene/1d32b37e917e4a37afa5e74387b182af" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+          <!-- 03 -->
+          <div class="scenario-card reveal" data-domain="lean">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-lean">生产</span><span class="card-num">#04</span></div>
+              <div class="card-name">质量追溯与缺陷分析</div>
+              <div class="card-role">面向：质量经理 / 质量工程师</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"客户投诉某产品不良率连续3个月上升，需要追溯根因并制定预防措施"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">不良品的根因是什么？如何从源头预防？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"被动检验"</strong>升级到<strong>"主动预防"</strong> —— 追溯缺陷根因，量化质量成本</div></div>
+              <div class="card-metrics"><span class="metric-pill">不良率PPM</span><span class="metric-pill">首次合格率</span><span class="metric-pill">COPQ</span><span class="metric-pill">Cpk</span></div>
+            </div>
+            <div class="card-foot"><a href="https://next.finebi.com/decision/agent/scene/ca12256b6f7345b8844b48bf5b133eba" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+        </div>
+
+        <!-- 供应链 -->
+        <div class="domain-divider">
+          <span class="domain-divider-label">供应链</span>
+          <span class="domain-divider-line"></span>
+          <span class="domain-divider-count">3 个场景</span>
+        </div>
+        <div class="scenario-grid">
+          <!-- 04 -->
+          <div class="scenario-card reveal" data-domain="sc">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-sc">供应链</span><span class="card-num">#05</span></div>
+              <div class="card-name">供应商绩效评估</div>
+              <div class="card-role">面向：采购经理 / SQE</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"供应商A连续3个月来料合格率下降，是淘汰还是给机会？需要数据说话"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">哪些供应商该淘汰？哪些该重点发展？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"凭感觉管理"</strong>升级到<strong>"数据驱动决策"</strong> —— QCDS四维度量化评估</div></div>
+              <div class="card-metrics"><span class="metric-pill">QCDS评分</span><span class="metric-pill">来料合格率</span><span class="metric-pill">准时交付率</span><span class="metric-pill">供应商等级</span></div>
+            </div>
+            <div class="card-foot"><a href="https://next.finebi.com/decision/agent/scene/6a2cda21e2ce480ca2e4002e0d71af55" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+          <!-- 05 -->
+          <div class="scenario-card reveal" data-domain="sc">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-sc">供应链</span><span class="card-num">#06</span></div>
+              <div class="card-name">库存与交付协同分析</div>
+              <div class="card-role">面向：仓储主管 / 交付经理</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"库存资金占用达2.3亿但核心客户交付延迟率升至12%，库存和交付怎么平衡？"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">库存水位合理吗？交付瓶颈在哪里？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"库存和交付分开管"</strong>升级到<strong>"库存→交付全链路协同"</strong></div></div>
+              <div class="card-metrics"><span class="metric-pill">库存周转率</span><span class="metric-pill">呆滞占比</span><span class="metric-pill">OTD交付率</span><span class="metric-pill">履行周期</span></div>
+            </div>
+            <div class="card-foot"><a href="https://bi.finecloud.com/decision/agent/scene/42651e7f0d4849d1a35e8277e5766b27" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+          <!-- 09 -->
+          <div class="scenario-card reveal" data-domain="sc">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-sc">供应链</span><span class="card-num">#07</span></div>
+              <div class="card-name">需求预测与计划达成</div>
+              <div class="card-role">面向：计划经理 / S&OP负责人</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"某品类预测准确率仅55%，导致库存积压300万，销售却说缺货"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">需求预测准不准？计划偏差出在哪里？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"拍脑袋预测"</strong>升级到<strong>"数据驱动计划"</strong> —— 评估预测准确性，定位偏差源</div></div>
+              <div class="card-metrics"><span class="metric-pill">MAPE</span><span class="metric-pill">预测偏差</span><span class="metric-pill">计划达成率</span><span class="metric-pill">响应周期</span></div>
+            </div>
+            <div class="card-foot"><a href="https://bi.finecloud.com/decision/agent/scene/abdd38b236f447938b31cd0bc480aa1" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+        </div>
+
+        <!-- 营销服 -->
+        <div class="domain-divider">
+          <span class="domain-divider-label">营销服</span>
+          <span class="domain-divider-line"></span>
+          <span class="domain-divider-count">2 个场景</span>
+        </div>
+        <div class="scenario-grid">
+          <!-- 08 -->
+          <div class="scenario-card reveal" data-domain="mkt">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-mkt">营销服</span><span class="card-num">#08</span></div>
+              <div class="card-name">客户订单与利润分析</div>
+              <div class="card-role">面向：销售总监 / 财务经理</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"销售收入增长15%但利润未增长，哪些客户在赚钱、哪些在亏钱？"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">哪些客户真正赚钱？哪些订单在亏钱？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"只看收入"</strong>升级到<strong>"算清利润"</strong> —— 看清客户和订单的真实利润贡献</div></div>
+              <div class="card-metrics"><span class="metric-pill">客户毛利率</span><span class="metric-pill">订单利润</span><span class="metric-pill">收入占比</span><span class="metric-pill">退货成本</span></div>
+            </div>
+            <div class="card-foot"><a href="https://bi.finecloud.com/decision/agent/scene/a7ab3b852c04499cbbd0ac8d023ccc8c" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+          <!-- 06 -->
+          <div class="scenario-card reveal" data-domain="mkt">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-mkt">营销服</span><span class="card-num">#09</span></div>
+              <div class="card-name">售后质量追溯与服务效率</div>
+              <div class="card-role">面向：售后服务经理 / 质量经理</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"某批次产品故障率飙升，客诉激增，需要快速定位根因并评估服务资源"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">产品故障的根因是什么？服务效率如何提升？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"救火式维修"</strong>升级到<strong>"数据驱动服务优化"</strong></div></div>
+              <div class="card-metrics"><span class="metric-pill">故障率PPM</span><span class="metric-pill">MTTR</span><span class="metric-pill">备件周转率</span><span class="metric-pill">一次性修复率</span></div>
+            </div>
+            <div class="card-foot"><a href="https://bi.finecloud.com/decision/agent/scene/8b7ac34e7c7a47b9aa25d73b8eb3a67a" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+        </div>
+
+        <!-- 财经 -->
+        <div class="domain-divider">
+          <span class="domain-divider-label">财经</span>
+          <span class="domain-divider-line"></span>
+          <span class="domain-divider-count">1 个场景</span>
+        </div>
+        <div class="scenario-grid">
+          <!-- 07 -->
+          <div class="scenario-card reveal" data-domain="fin">
+            <div class="card-head">
+              <div class="card-top"><span class="card-tag tag-fin">财经</span><span class="card-num">#10</span></div>
+              <div class="card-name">生产成本构成分析</div>
+              <div class="card-role">面向：财务总监 / 生产总监</div>
+            </div>
+            <div class="card-body">
+              <div><div class="card-section-label">触发事件</div><div class="card-trigger">"某产品线毛利率同比下降3个百分点，老板要求本周内找到原因"</div></div>
+              <div><div class="card-section-label">要回答的核心问题</div><div class="card-question">生产成本花在哪里？哪里有节省空间？</div></div>
+              <div><div class="card-section-label">价值主张</div><div class="card-value">从<strong>"月底算账"</strong>升级到<strong>"实时成本洞察"</strong> —— 看清成本结构，定位浪费分布</div></div>
+              <div class="card-metrics"><span class="metric-pill">单位成本</span><span class="metric-pill">成本构成</span><span class="metric-pill">偏差率</span><span class="metric-pill">成本对标</span></div>
+            </div>
+            <div class="card-foot"><a href="https://bi.finecloud.com/decision/agent/scene/8cb68747d2194aecb217bb452f0d76b4" class="btn btn-primary" target="_blank" rel="noopener noreferrer">体验Agent</a></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════ TAB 2: 选型逻辑 ═══════════════ -->
+  <div class="tab-panel" id="panel-method">
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Selection Methodology</p>
+          <h2 class="section-title">为什么是这10个场景</h2>
+          <p class="section-lead">每一个场景的选定都经过严格的筛选标准和多维度交叉验证，不是拍脑袋的结果</p>
+        </div>
+
+        <h3 class="sub-title">四条选型原则</h3>
+        <div class="method-grid">
+          <div class="method-card">
+            <h4><span class="method-num">1</span> 通用性</h4>
+            <p><span class="hl">80%以上的制造企业存在此场景。</span>不绑定特定行业（如半导体光刻、制药GMP），确保场景可跨行业复制。</p>
+          </div>
+          <div class="method-card">
+            <h4><span class="method-num">2</span> 痛点普遍性</h4>
+            <p><span class="hl">业务部门高频提到的共性痛点；管理层经营决策中的高频关注点。</span>排除偶发性问题和非经营相关的行政性问题。</p>
+          </div>
+          <div class="method-card">
+            <h4><span class="method-num">3</span> 数据可得性</h4>
+            <p><span class="hl">所需数据在MES/ERP/QMS/WMS等系统中普遍存在。</span>不依赖IoT传感器实时数据或外部数据源。</p>
+          </div>
+          <div class="method-card">
+            <h4><span class="method-num">4</span> BI能力匹配</h4>
+            <p><span class="hl">FBN原生能力可完全支撑。</span>指标卡、图表、筛选器、联动、预警均可实现，不依赖机器学习算法。</p>
+          </div>
+        </div>
+
+        <div class="callout" style="margin-top: 40px;">
+          <p>场景选型从三个维度交叉验证：制造业价值链映射确保端到端无盲区，部门映射确保每个业务部门都有对应场景，价值密度确保每个场景都能快速产出可演示的分析成果。</p>
+        </div>
+
+        <h3 class="sub-title" style="margin-top: 40px;">三维度交叉验证</h3>
+        <div class="dim-grid">
+          <div class="dim-card">
+            <h4>维度一：研产供销服体系映射</h4>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>研发</strong> — 10-研发项目、11-BOM变更</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>生产</strong> — 01-生产效率与执行、03-质量追溯</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>供应链</strong> — 04-供应商、05-库存与交付、09-需求预测</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>营销服</strong> — 08-客户利润、06-售后质量</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>财经</strong> — 07-成本分析</span></div>
+          </div>
+          <div class="dim-card">
+            <h4>维度二：部门映射</h4>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>研发部</strong> — 研发项目、BOM变更</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>生产部</strong> — 生产效率与执行</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>质量部</strong> — 质量追溯、BOM变更（联动）</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>采购部</strong> — 供应商绩效</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>仓储物流</strong> — 库存与交付协同</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>财务部</strong> — 成本分析</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>PMC/计划</strong> — 需求预测</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>销售部</strong> — 客户订单利润</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>售后服务</strong> — 售后质量与服务</span></div>
+          </div>
+          <div class="dim-card">
+            <h4>维度三：价值密度</h4>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>快速闭环</strong> — 每个场景30分钟内完成"发现→定位→建议"全链路</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>高可演示性</strong> — 数据故事清晰，客户一看就懂</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>决策可落地</strong> — 每个场景都指向具体的改善行动</span></div>
+            <div class="dim-item"><span class="dim-dot"></span><span class="dim-text"><strong>ROI可量化</strong> — 改善效果可以用财务指标衡量</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════ TAB 3: 覆盖矩阵 ═══════════════ -->
+  <div class="tab-panel" id="panel-matrix">
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Coverage Matrix</p>
+          <h2 class="section-title">覆盖矩阵</h2>
+          <p class="section-lead">从业务域、部门、价值链三个维度验证覆盖的完整性</p>
+        </div>
+
+        <h3 class="sub-title">业务域覆盖</h3>
+        <table class="matrix-table" style="margin-bottom: 48px;">
+          <thead><tr><th>体系</th><th>覆盖场景</th><th>场景数</th><th>覆盖评价</th></tr></thead>
+          <tbody>
+            <tr><td><strong>研发</strong></td><td>10-研发项目、11-BOM变更</td><td>2</td><td>覆盖项目管理+BOM全链路影响</td></tr>
+            <tr><td><strong>生产</strong></td><td>01-生产效率与执行、03-质量追溯</td><td>2</td><td>覆盖效率+质量两大核心</td></tr>
+            <tr><td><strong>供应链</strong></td><td>04-供应商、05-库存与交付、09-需求预测</td><td>3</td><td>覆盖采购到交付全链路</td></tr>
+            <tr><td><strong>营销服</strong></td><td>08-客户利润、06-售后质量</td><td>2</td><td>覆盖售前利润+售后质量</td></tr>
+            <tr><td><strong>财经</strong></td><td>07-成本分析</td><td>1</td><td>覆盖成本分析</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-title">部门覆盖</h3>
+        <table class="matrix-table" style="margin-bottom: 48px;">
+          <thead><tr><th>业务部门</th><th>覆盖场景</th><th>覆盖深度</th></tr></thead>
+          <tbody>
+            <tr><td><strong>研发部</strong></td><td>10-研发项目、11-BOM变更</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="on"></span></span></td></tr>
+            <tr><td><strong>生产部</strong></td><td>01-生产效率与执行</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="on"></span></span></td></tr>
+            <tr><td><strong>质量部</strong></td><td>03-质量追溯、11-BOM变更（联动）</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+            <tr><td><strong>采购部</strong></td><td>04-供应商绩效</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+            <tr><td><strong>仓储物流部</strong></td><td>05-库存与交付</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="on"></span></span></td></tr>
+            <tr><td><strong>财务部</strong></td><td>07-成本分析</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="on"></span></span></td></tr>
+            <tr><td><strong>PMC/计划部</strong></td><td>09-需求预测、01-生产效率（联动）</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+            <tr><td><strong>设备/工程部</strong></td><td>01-生产效率与执行（含能源）</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+            <tr><td><strong>销售部</strong></td><td>08-客户订单利润、05-库存与交付（联动）</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+            <tr><td><strong>售后服务部</strong></td><td>06-售后质量与服务</td><td><span class="coverage-dot"><span class="on"></span><span class="on"></span><span class="off"></span></span></td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-title">研产供销服 + 财经覆盖</h3>
+        <div class="flow-wrap">
+          <div class="flow">
+            <div class="flow-node"><div class="flow-node-box"><div class="flow-node-title">研发</div><div class="flow-node-scene">10-研发项目<br/>11-BOM变更</div></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><div class="flow-node-box"><div class="flow-node-title">生产</div><div class="flow-node-scene">01-效率与执行<br/>03-质量追溯</div></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><div class="flow-node-box"><div class="flow-node-title">供应链</div><div class="flow-node-scene">04-供应商<br/>05-库存与交付<br/>09-需求预测</div></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><div class="flow-node-box"><div class="flow-node-title">营销服</div><div class="flow-node-scene">08-客户利润<br/>06-售后质量</div></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node"><div class="flow-node-box"><div class="flow-node-title">财经</div><div class="flow-node-scene">07-成本分析</div></div></div>
+          </div>
+        </div>
+        <div class="callout" style="margin-top: 24px;">
+          <p>全链路覆盖，无盲区。每个核心业务环节至少有一个场景Agent支撑，形成从需求到交付的完整分析闭环。12-精益改善贯穿全链路，驱动持续优化。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ═══════════════ TAB 4: 场景协同 ═══════════════ -->
+  <div class="tab-panel" id="panel-collab">
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <p class="section-eyebrow">Scenario Synergy</p>
+          <h2 class="section-title">场景协同</h2>
+          <p class="section-lead">10个场景不是孤立的，它们之间存在天然的数据关联和分析协同</p>
+        </div>
+
+        <h3 class="sub-title">协同关系</h3>
+        <table class="matrix-table" style="margin-bottom: 48px;">
+          <thead><tr><th>协同关系</th><th>场景组合</th><th>协同价值</th></tr></thead>
+          <tbody>
+            <tr><td><strong>研发→生产</strong></td><td>11-BOM + 01-生产效率</td><td>BOM变更 → 生产工艺调整 → 效率/成本影响</td></tr>
+            <tr><td><strong>研发→质量</strong></td><td>11-BOM + 03-质量</td><td>BOM变更 → 新材料/工艺 → 质量风险评估</td></tr>
+            <tr><td><strong>效率→成本</strong></td><td>01-生产效率 + 07-成本</td><td>设备效率低 → 单位成本高，定位效率改善的财务价值</td></tr>
+            <tr><td><strong>质量→成本</strong></td><td>03-质量 + 07-成本</td><td>不良率高 → 质量成本高，量化质量改善的ROI</td></tr>
+            <tr><td><strong>采购→库存</strong></td><td>04-供应商 + 05-库存与交付</td><td>供应商交期不准 → 安全库存高 → 影响交付</td></tr>
+            <tr><td><strong>生产→交付</strong></td><td>01-生产效率 + 05-库存与交付</td><td>生产计划未达成 → 客户交付延迟，端到端追溯</td></tr>
+            <tr><td><strong>售后→质量</strong></td><td>06-售后 + 03-质量</td><td>售后故障数据 → 反馈到生产质量改善</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="sub-title">协同分析示例：客户反馈产品故障率上升</h3>
+        <div class="collab-example">
+          <div class="collab-steps">
+            <div class="collab-step">
+              <div class="collab-step-num">STEP 01</div>
+              <div class="collab-step-title">09-售后质量追溯</div>
+              <div class="collab-step-desc">定位到某批次产品故障率飙升，客诉集中在特定型号</div>
+            </div>
+            <div class="collab-step">
+              <div class="collab-step-num">STEP 02</div>
+              <div class="collab-step-title">03-质量追溯</div>
+              <div class="collab-step-desc">追溯到生产批次，发现该批次工艺参数偏离标准值</div>
+            </div>
+            <div class="collab-step">
+              <div class="collab-step-num">STEP 03</div>
+              <div class="collab-step-title">11-BOM变更影响</div>
+              <div class="collab-step-desc">发现该批次产品有BOM变更，新材料供应商替换导致</div>
+            </div>
+            <div class="collab-step">
+              <div class="collab-step-num">STEP 04</div>
+              <div class="collab-step-title">07-成本核算</div>
+              <div class="collab-step-desc">计算质量损失金额：客诉处理5万 + 退换货12万 + 品牌损失</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<!-- ===== Footer ===== -->
+<footer class="pagefoot">
+  <div class="container">FBN Manufacturing Scenario Agent Map · FineBinext</div>
+</footer>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('panel-' + btn.dataset.tab);
+      if (panel) {
+        panel.classList.add('active');
+        setTimeout(() => observeElements(), 50);
+      }
+    });
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  function observeElements() {
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
+  }
+  observeElements();
+</script>
+
+</body>
+</html>
